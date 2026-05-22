@@ -73,6 +73,12 @@ namespace Process_Engineering.Service
             workSheet.Columns.AutoFit();
         }
 
+        public void setTextFormat(int sheetNumber, string cellName)
+        {
+            Worksheet workSheet = book.Sheets[sheetNumber];
+            workSheet.Range[cellName].NumberFormat = "@";
+        }
+
         public void setPicture(int sheetNumber, Image picture, string leftTopCell, string rightBottomCell, bool autoSize)
         {
             Worksheet sheet = book.Sheets[sheetNumber];

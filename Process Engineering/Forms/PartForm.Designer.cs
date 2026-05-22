@@ -203,6 +203,7 @@
             // 
             // lbCards
             // 
+            this.lbCards.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.lbCards.FormattingEnabled = true;
             this.lbCards.Location = new System.Drawing.Point(12, 341);
             this.lbCards.Name = "lbCards";

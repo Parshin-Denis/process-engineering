@@ -19,6 +19,7 @@
 using Process_Engineering.Service;
 using System;
 using System.IO;
+using System.Net;
 using unoidl.com.sun.star.awt;
 using unoidl.com.sun.star.beans;
 using unoidl.com.sun.star.container;
@@ -29,6 +30,7 @@ using unoidl.com.sun.star.lang;
 using unoidl.com.sun.star.sheet;
 using unoidl.com.sun.star.table;
 using unoidl.com.sun.star.text;
+using unoidl.com.sun.star.util;
 using unoidl.com.sun.star.view;
 
 // __________  implementation  ____________________________________
@@ -447,6 +449,16 @@ public class LibreService : System.IDisposable, IXlsService
         XCell xCell = xSheet.getCellByPosition(nColumn, nRow);
         XText xText = (XText)xCell;
         xText.setString(value);
+    }
+
+    public void setTextFormat(int sheetNumber, string cellName)
+    {
+        XNumberFormatsSupplier xNumberFormatsSupplier = (XNumberFormatsSupplier)mxDocument;
+        XNumberFormatTypes xNumberFormatTypes = (XNumberFormatTypes)xNumberFormatsSupplier.getNumberFormats();        
+        int format = xNumberFormatTypes.getStandardFormat(NumberFormat.TEXT, new Locale());
+        XSpreadsheet xSheet = getSheet(sheetNumber - 1);
+        XPropertySet xProp = (XPropertySet)xSheet.getCellRangeByName(cellName);        
+        xProp.setPropertyValue("NumberFormat", new uno.Any(format));        
     }
 
     public void setPicture(int sheetNumber, System.Drawing.Image picture, string leftTopCell, string rightBottomCell, bool autoSize)

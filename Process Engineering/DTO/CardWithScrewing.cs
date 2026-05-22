@@ -10,7 +10,7 @@ namespace Process_Engineering.DTO
 
         public Screwing screwing { set; get; }
 
-        public long? pitchId { get; set; }
+        public long? pitchId { get; set; }        
 
         public bool isActual { get; set; }
 

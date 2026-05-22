@@ -150,9 +150,9 @@ namespace Process_Engineering.Service
             return await get<List<User>>($"api/user");
         }
 
-        public static async Task<List<User>> getCardCreatorList()
+        public static async Task<List<User>> getCardCreatorList(bool isActual)
         {
-            return await get<List<User>>($"api/card/creator");
+            return await get<List<User>>($"api/card/creator?isActual={isActual}");
         }
 
         public static async Task<GeneralResponse<object>> updateUser(User user)
@@ -246,21 +246,16 @@ namespace Process_Engineering.Service
         public static async Task<CardMainInfo> getCard(int number, int version)
         {
             return await get<CardMainInfo>($"api/card/by?number={number}&version={version}");
-        }
-
-        public static async Task<List<Card>> getAllCards()
-        {
-            return await get<List<Card>>($"api/card");
-        }
+        }        
 
         public static async Task<CardList> getAllCards(CardFilter filter, int page, int size)
         {
             return await get<CardList>($"api/card/filter?{filter.getQuery()}&page={page}&size={size}");
         }
 
-        public static async Task<List<CardWithScrewing>> getAllCardsByPart(long? partId)
+        public static List<CardShortInfo> getAllCardsByPart(long? partId)
         {
-            return await get<List<CardWithScrewing>>($"api/card/by_part?id={partId}");
+            return Task.Run(() => get<List<CardShortInfo>>($"api/card/by_part?id={partId}")).Result;
         }
 
         internal static async Task<List<CardMovement>> getAllCardMovements(CardMainInfo card)
@@ -278,11 +273,16 @@ namespace Process_Engineering.Service
             return await get<List<CardWithScrewing>>($"api/card/screwing");
         }
 
+        internal static int getLastCardVersion(CardBase card)
+        {
+            return Task.Run(() => get<int>($"api/card/{card.number}/version")).Result;
+        }
+
         public static async Task<Image> getPicture(long id)
         {
             try
             {
-                HttpResponseMessage response = await sendRequest(RequestType.GET, $"api/page/picture/{id}");
+                HttpResponseMessage response = await sendRequest(RequestType.GET, $"api/page/{id}/picture");
                 response.EnsureSuccessStatusCode();
                 Stream stream = await response.Content.ReadAsStreamAsync();
                 return Image.FromStream(stream);
@@ -293,24 +293,24 @@ namespace Process_Engineering.Service
             }
         }
 
-        internal static async Task<GeneralResponse<List<Card>>> putPitch(long cardId, long? pitchId)
+        internal static GeneralResponse<int> putPitch(long cardId, long? pitchId)
         {
-            return await update<List<Card>>($"api/card/{cardId}/pitch?value={pitchId}", null);
+            return Task.Run(() => update<int>($"api/card/{cardId}/pitch?value={pitchId}", null)).Result;
         }
 
-        internal static async Task<GeneralResponse<List<Card>>> setPosition(long cardId, decimal position)
+        internal static GeneralResponse<object> setPosition(long cardId, decimal position)
         {
-            return await update<List<Card>>($"api/card/{cardId}/position?value={position}", null);
+            return Task.Run(() => update<object>($"api/card/{cardId}/position?value={position}", null)).Result;
         }
 
-        internal static async Task<GeneralResponse<object>> putInArchive(CardMainInfo card)
+        internal static GeneralResponse<object> putInArchive(CardMainInfo card)
         {
-            return await update<object>($"api/card/{card.number}/archive", null);
+            return Task.Run(() => update<object>($"api/card/{card.number}/archive", null)).Result;
         }
 
-        internal static async Task<GeneralResponse<object>> deleteCard(CardMainInfo card)
+        internal static GeneralResponse<object> deleteCard(CardMainInfo card)
         {
-            return await delete<object>($"api/card/{card.id}");            
+            return Task.Run(() => delete<object>($"api/card/{card.id}")).Result;            
         }        
 
         #endregion

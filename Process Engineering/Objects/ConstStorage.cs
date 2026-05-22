@@ -55,7 +55,7 @@
         public const string USER_IS_ADDED = "Пользователь добавлен";
         public const string USER_IS_UPDATED = "Пользователь изменен";
         public const string UPDATE_USER = "Изменить данные пользователя с ID {0}?";
-        public const string NO_PITCH = "не задан";
+        public const string NO_PITCH = "-не задан-";
 
         public const string PITCH_PUTTING = "Перенос на пост";
         public const string PUT_PITCH = "Перенести гамму на пост {0}?";

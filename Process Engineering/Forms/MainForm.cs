@@ -81,8 +81,11 @@ namespace Process_Engineering.Forms
             udPosition.Visible = User.isCardEditingAllowed() && isActualCardsMode;
             lPitchNumber.Visible = User.isCardEditingAllowed() && isActualCardsMode;
             lPosition.Visible = User.isCardEditingAllowed() && isActualCardsMode;
+            bChrono.Visible = isActualCardsMode;
             lPitch.Visible = isActualCardsMode;
             cbPitch.Visible = isActualCardsMode;
+            lPart.Visible = isActualCardsMode;
+            cbPart.Visible = isActualCardsMode;
         }        
 
         #endregion
@@ -217,7 +220,7 @@ namespace Process_Engineering.Forms
             if ((sender as ComboBox).Text.Length == 1)
             {
                 Pitch.pitches = (await DataBaseService.getPitchList()).OrderBy(p => p.number).ToList();
-                Pitch.pitches.Insert(0, new Pitch("-не задан-"));
+                Pitch.pitches.Insert(0, new Pitch(ConstStorage.NO_PITCH));
             }            
             GeneralService.FilterComboBoxItems(sender as ComboBox, Pitch.pitches);
         }
@@ -244,7 +247,7 @@ namespace Process_Engineering.Forms
 
         private async void cbUsers_DropDown(object sender, EventArgs e)
         {
-            cardCreators = await DataBaseService.getCardCreatorList();
+            cardCreators = await DataBaseService.getCardCreatorList(isActualCardsMode);
             GeneralService.UpdateComboBoxItems(sender as ComboBox, cardCreators);
         }
 
@@ -296,7 +299,8 @@ namespace Process_Engineering.Forms
             cbVersion.Items.Clear();
             if (selectedCardFinalVS != null)
             {
-                for (int i = selectedCardFinalVS.version; i > 0; i--) cbVersion.Items.Add(i);
+                int lastVersion = isActualCardsMode ? selectedCardFinalVS.version : DataBaseService.getLastCardVersion(selectedCardFinalVS);
+                for (int i = lastVersion; i > 0; i--) cbVersion.Items.Add(i);
                 if (!isActualCardsMode)
                 {
                     cbVersion.Items.Insert(0, 0);
@@ -413,12 +417,12 @@ namespace Process_Engineering.Forms
             }                        
             CardMainInfo archiveCard = isActualCardsMode ? null
                                                          : await DataBaseService.getCard(selectedCard.number, 0);
-            GeneralResponse<object> response = isActualCardsMode ? await DataBaseService.putInArchive(selectedCard)
-                                                                 : await DataBaseService.deleteCard(archiveCard);
+            GeneralResponse<object> response = isActualCardsMode ? DataBaseService.putInArchive(selectedCard)
+                                                                 : DataBaseService.deleteCard(archiveCard);
             if (response.isResultOK)
             {                
                 dgCards.Enabled = false;
-                cards.Remove(selectedCardFinalVS);                
+                cards.Remove(selectedCardFinalVS);
                 dgCards.Rows.RemoveAt(dgCards.SelectedRows[0].Index);                
                 dgCards.Enabled = true;
                 dgCards.ClearSelection();                                
@@ -466,8 +470,7 @@ namespace Process_Engineering.Forms
         }
 
         private void UpdateDGCardInfo()
-        {
-            Pitch pitch = selectedCard?.pitchId == null ? null : Pitch.pitches.Find(p => p.id == selectedCard.pitchId);
+        {            
             gbCardInfo.Text = $"Параметры гаммы № {selectedCard?.number:000000}";
             dgCardInfo.Rows[0].Cells[1].Value = selectedCard != null ? ConstStorage.CARD_TYPES.First(c => c.StartsWith(selectedCard.cardType)) : string.Empty;
             dgCardInfo.Rows[1].Cells[1].Value = selectedCard != null ? ConstStorage.PROJECTS.First(p => p.StartsWith(selectedCard.project)) : string.Empty;
@@ -482,14 +485,11 @@ namespace Process_Engineering.Forms
             dgCardInfo.Rows[9].Cells[1].Value = selectedCard?.creator?.name;
             dgCardInfo.Rows[10].Cells[1].Value = selectedCard?.creationTime.ToLocalTime();
             dgCardInfo.Rows[11].Cells[1].Value = selectedCard?.updateTime.ToLocalTime();
-            dgCardInfo.Rows[12].Cells[1].Value = selectedCard != null
-                ? selectedCard?.pitchId == null
-                    ? ConstStorage.NO_PITCH
-                    : Pitch.pitches.Find(p => p.id == selectedCard.pitchId).number
-                : string.Empty;
+            Pitch pitch = Pitch.GetPitch(selectedCard?.pitchId);
+            dgCardInfo.Rows[12].Cells[1].Value = selectedCard != null ? pitch.number : string.Empty;
             udPosition.Maximum = udPosition.Enabled && cards.Count > 0 ? cards.Count : 1000;
-            udPosition.Value = pitch == null ? 1 : Convert.ToDecimal(selectedCard.position);
-            cbCardPitch.SelectedItem = pitch ?? Pitch.pitches[0];
+            udPosition.Value = Convert.ToDecimal(selectedCard?.position ?? 1);
+            cbCardPitch.SelectedItem = pitch;
         }
 
         private async void bExcel_Click(object sender, EventArgs e)
@@ -498,7 +498,7 @@ namespace Process_Engineering.Forms
             ExtractionService.show(card);
         }        
 
-        private async void bPutPitch_Click(object sender, EventArgs e)
+        private void bPutPitch_Click(object sender, EventArgs e)
         {
             Pitch newPitch = cbCardPitch.SelectedItem as Pitch;
             if (MessageBox.Show(string.Format(newPitch == null ? ConstStorage.DELETE_PITCH : ConstStorage.PUT_PITCH, newPitch?.number),
@@ -506,13 +506,12 @@ namespace Process_Engineering.Forms
             {
                 return;
             }
-            GeneralResponse<List<Card>> response = await DataBaseService.putPitch(selectedCard.id ?? 0, newPitch?.id ?? 0);
+            GeneralResponse<int> response = DataBaseService.putPitch(selectedCard.id ?? 0, newPitch?.id ?? 0);
             if (response.isResultOK)
             {                
                 selectedCard.pitchId = newPitch?.id;
                 if (dgCards.Columns[1].Visible) // просмотр гамм поста в хронологическом порядке
-                {
-                    //response.data.ForEach(c => cards.Find(v => c.id == v.id).position = c.position);                    
+                {                    
                     dgCards.Enabled = false;
                     cards.Remove(selectedCardFinalVS);
                     dgCards.Rows.Remove(dgCards.SelectedRows[0]);
@@ -521,9 +520,8 @@ namespace Process_Engineering.Forms
                 }
                 else
                 {
-                    dgCardInfo.Rows[12].Cells[1].Value = selectedCard?.pitchId == null
-                        ? ConstStorage.NO_PITCH
-                        : Pitch.pitches.Find(p => p.id == selectedCard.pitchId).number;                
+                    dgCardInfo.Rows[12].Cells[1].Value = Pitch.GetPitch(selectedCard.pitchId).number;
+                    udPosition.Value = Convert.ToDecimal(response.data);
                 }                
                 MessageBox.Show(response.message, ConstStorage.PITCH_PUTTING, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
@@ -534,13 +532,12 @@ namespace Process_Engineering.Forms
             }
         }
 
-        private async void bPosition_Click(object sender, EventArgs e)
+        private void bPosition_Click(object sender, EventArgs e)
         {
-            GeneralResponse<List<Card>> response = await DataBaseService.setPosition(selectedCard.id ?? 0, udPosition.Value);
+            GeneralResponse<object> response = DataBaseService.setPosition(selectedCard.id ?? 0, udPosition.Value);
             if (response.isResultOK)
             {
-                int newPosition = Convert.ToInt32(udPosition.Value);
-                //response.data.ForEach(c => cards.Find(v => c.id == v.id).position = c.position);
+                int newPosition = Convert.ToInt32(udPosition.Value);                
                 
                 if (dgCards.Columns[1].Visible) // просмотр гамм поста в хронологическом порядке
                 {
@@ -562,9 +559,12 @@ namespace Process_Engineering.Forms
         private async void cbVersion_SelectedIndexChanged(object sender, EventArgs e)
         {
             selectedCard = await DataBaseService.getCard(selectedCardFinalVS.number, (int)cbVersion.SelectedItem);
+            bool isArchiveVersion = cbVersion.SelectedItem?.Equals(0) ?? false;
             bEdit.Enabled = cbVersion.SelectedIndex == 0;
-            bExcel.Enabled = !cbVersion.SelectedItem?.Equals(0) ?? false;
-            bCopyCard.Enabled = !cbVersion.SelectedItem?.Equals(0) ?? false;
+            bExcel.Enabled = !isArchiveVersion;
+            bCopyCard.Enabled = !isArchiveVersion;
+            dgCardInfo.Rows[10].Cells[0].Value = isArchiveVersion ? "Дата закрытия" : "Дата создания";
+            dgCardInfo.Rows[11].Visible = !isArchiveVersion;
             UpdateDGCardInfo();
         }        
 
@@ -614,7 +614,7 @@ namespace Process_Engineering.Forms
             Pitch.pitches = Task.Run(() => DataBaseService.getPitchList()).Result.OrderBy(p => p.number).ToList();            
             PitchForm pitchForm = new PitchForm();
             pitchForm.ShowDialog();
-            Pitch.pitches.Insert(0, new Pitch("-не задан-"));
+            Pitch.pitches.Insert(0, new Pitch(ConstStorage.NO_PITCH));
             GeneralService.FilterComboBoxItems(cbCardPitch, Pitch.pitches);
             GeneralService.FilterComboBoxItems(cbPitch, Pitch.pitches);
         }
@@ -643,8 +643,7 @@ namespace Process_Engineering.Forms
             ConstStorage.SECTORS = await DataBaseService.getConstants(ConstStorage.SECTOR);
             ConstStorage.BLM_LIST = (await DataBaseService.getConstants(ConstStorage.BLM))
                 .Select(b => int.Parse(b))
-                .ToArray();
-            ScrewingToolType.types = await DataBaseService.getScrewingToolTypeList();
+                .ToArray();            
             CampaignForm screwingToolCheckForm = new CampaignForm();
             screwingToolCheckForm.ShowDialog();
         }
@@ -672,7 +671,7 @@ namespace Process_Engineering.Forms
             GeneralService.FilterComboBoxItems(cbPart, usedParts);
 
             Pitch.pitches = (await DataBaseService.getPitchList()).OrderBy(p => p.number).ToList();
-            Pitch.pitches.Insert(0, new Pitch("-не задан-"));
+            Pitch.pitches.Insert(0, new Pitch(ConstStorage.NO_PITCH));
             GeneralService.FilterComboBoxItems(cbCardPitch, Pitch.pitches);
             GeneralService.FilterComboBoxItems(cbPitch, Pitch.pitches);
 

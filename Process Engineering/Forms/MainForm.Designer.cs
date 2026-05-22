@@ -325,7 +325,6 @@
             // 
             // pictureBox
             // 
-            this.pictureBox.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("pictureBox.BackgroundImage")));
             this.pictureBox.Dock = System.Windows.Forms.DockStyle.Top;
             this.pictureBox.InitialImage = null;
             this.pictureBox.Location = new System.Drawing.Point(3, 114);
@@ -334,6 +333,7 @@
             this.pictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox.TabIndex = 9;
             this.pictureBox.TabStop = false;
+            this.pictureBox.Visible = false;
             // 
             // gbCardInfo
             // 

@@ -6,7 +6,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Process_Engineering.Forms
@@ -43,8 +42,8 @@ namespace Process_Engineering.Forms
             if (!dgParts.Enabled) { return; }
             if (dgParts.SelectedRows.Count != 0)
             {
-                part.CopyFrom(dgParts.SelectedRows[0].DataBoundItem as Part);                
-                lbCards.DataSource = Task.Run(() => DataBaseService.getAllCardsByPart(part.id)).Result;
+                part.CopyFrom(dgParts.SelectedRows[0].DataBoundItem as Part);
+                lbCards.DataSource = DataBaseService.getAllCardsByPart(part.id);
                 lbCards.ClearSelected();
             }
             else
@@ -55,7 +54,7 @@ namespace Process_Engineering.Forms
             tbName.Text = dgParts.SelectedRows.Count != 0 ? part.name : string.Empty;
             tbUnit.Text = dgParts.SelectedRows.Count != 0 ? part.unit : string.Empty;
             bUpdate.Enabled = false;
-            bAdd.Enabled = false;            
+            bAdd.Enabled = false;
         }
 
         private async void bAdd_Click(object sender, EventArgs e)
@@ -156,7 +155,7 @@ namespace Process_Engineering.Forms
         private async void lbCards_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             if (lbCards.SelectedIndex == -1) return;
-            Card card = await DataBaseService.getCard((lbCards.SelectedItem as Card).id);            
+            Card card = await DataBaseService.getCard((lbCards.SelectedItem as CardBase).id);
             ExtractionService.show(card);
         }
 
@@ -167,20 +166,19 @@ namespace Process_Engineering.Forms
         }
 
         private void lbCards_DrawItem(object sender, DrawItemEventArgs e)
-        {            
-            e.Graphics.FillRectangle((lbCards.Items[e.Index] as CardWithScrewing).isActual ? Brushes.White : Brushes.LightGray, e.Bounds);
+        {
+            e.Graphics.FillRectangle((lbCards.Items[e.Index] as CardShortInfo).isActual ? Brushes.White : Brushes.LightGray, e.Bounds);
 
-            Brush brush = (e.State & DrawItemState.Selected) == DrawItemState.Selected ? Brushes.Black : Brushes.Black;
+            e.Graphics.DrawString(lbCards.Items[e.Index].ToString(), e.Font, Brushes.Black, e.Bounds);
 
-            e.Graphics.DrawString(lbCards.Items[e.Index].ToString(), e.Font, brush, e.Bounds);
             if ((e.State & DrawItemState.Selected) == DrawItemState.Selected)
             {
                 Pen pen = new Pen(Color.Blue, 2);
 
-                Rectangle rect = new Rectangle(e.Bounds.X + 1, e.Bounds.Y + 1, e.Bounds.Width - 2, e.Bounds.Height - 2);                
+                Rectangle rect = new Rectangle(e.Bounds.X + 1, e.Bounds.Y + 1, e.Bounds.Width - 2, e.Bounds.Height - 2);
                 
                 e.Graphics.DrawRectangle(pen, rect);
-            }            
+            }
         }
     }
 }

@@ -31,25 +31,28 @@ namespace Process_Engineering.Service
             try
             {
                 IXlsService xlsService = getXlsService();
-                xlsService.open(string.Empty, true);
+                xlsService.open(string.Empty, true);                
+                xlsService.setTextFormat(1, "A:A");
 
                 int RowNumber = 1;
                 xlsService.setTextValue(1, $"A{RowNumber}", "Номер детали");
                 xlsService.setTextValue(1, $"B{RowNumber}", "Название детали");
                 xlsService.setTextValue(1, $"C{RowNumber}", "Номер гаммы");
                 xlsService.setTextValue(1, $"D{RowNumber}", "Пост");
-                xlsService.setTextValue(1, $"E{RowNumber++}", "Количество");
+                xlsService.setTextValue(1, $"E{RowNumber}", "Количество");
+                xlsService.setTextValue(1, $"F{RowNumber++}", "Ед. изм.");
                 foreach (ConsumptionResponse consumption in consumptionList)
                 {
                     xlsService.setTextValue(1, $"A{RowNumber}", consumption.partNumber);
                     xlsService.setTextValue(1, $"B{RowNumber}", consumption.partName);
                     xlsService.setTextValue(1, $"C{RowNumber}", consumption.cardTitle);
                     xlsService.setTextValue(1, $"D{RowNumber}", consumption.pitchNumber);
-                    xlsService.setTextValue(1, $"E{RowNumber++}", consumption.quantity.ToString());
+                    xlsService.setTextValue(1, $"E{RowNumber}", consumption.quantity.ToString());
+                    xlsService.setTextValue(1, $"F{RowNumber++}", consumption.unit);
                 }
-                if (xlsService is ExcelService)
+                if (xlsService is ExcelService excelService)
                 {
-                    ((ExcelService)xlsService).autoFit(1);
+                    excelService.autoFit(1);
                 }
             }
             catch
@@ -310,7 +313,7 @@ namespace Process_Engineering.Service
                     return new LibreService();
                 }
                 else
-                {
+                {                    
                     return new ExcelService();
                 }
             }

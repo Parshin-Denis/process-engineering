@@ -105,6 +105,8 @@ namespace Process_Engineering.Forms
             }
             campaign = response.data;
             Sensor.sensors = await DataBaseService.getSensorList();
+            Tool.tools = await DataBaseService.getToolList();
+            ScrewingToolType.types = await DataBaseService.getScrewingToolTypeList();
             writeOnDisk(diskName, campaign);
             campaign.setDetails();
             Campaign.campaigns.Insert(0, campaign);
@@ -371,6 +373,8 @@ namespace Process_Engineering.Forms
             }
             Campaign campaignDetailed = await DataBaseService.getCampaign(campaign.id ?? 0);
             Sensor.sensors = await DataBaseService.getSensorList();
+            Tool.tools = await DataBaseService.getToolList();
+            ScrewingToolType.types = await DataBaseService.getScrewingToolTypeList();
             writeOnDisk(diskName, campaignDetailed);
             MessageBox.Show(string.Format(ConstStorage.CAMPAIGN_LOADED, diskName), ConstStorage.CAMPAIGN_LOAD,
                 MessageBoxButtons.OK, MessageBoxIcon.Information);

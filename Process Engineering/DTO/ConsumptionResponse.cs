@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Process_Engineering.DTO
+﻿namespace Process_Engineering.DTO
 {
     internal class ConsumptionResponse
     {
@@ -14,9 +8,11 @@ namespace Process_Engineering.DTO
 
         public string cardTitle { get; set; }
 
-        public string pitchNumber { get; set; }        
+        public string pitchNumber { get; set; }
 
-        public float quantity { get; set; }        
+        public float quantity { get; set; }
+
+        public string unit { get; set; }
 
     }
 }

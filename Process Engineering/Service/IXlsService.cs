@@ -12,6 +12,8 @@ namespace Process_Engineering.Service
 
         void setTextValue(int sheetNumber, string cellName, string value);
 
+        void setTextFormat(int sheetNumber, string cellName);
+
         void setPicture(int sheetNumber, Image picture, string leftTopCell, string rightBottomCell, bool autoSize);
 
         void print(string printerName);
