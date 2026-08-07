@@ -354,7 +354,7 @@ namespace Process_Engineering
 
         private void dgParts_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
-            if (e.Column.Index != 1) return;
+            if (e.Column.Index != 1 || dgParts.Columns.Count < 6) return;
             dgParts.Columns[2].Width = dgParts.Width - dgParts.RowHeadersWidth - dgParts.Columns[1].Width - dgParts.Columns[3].Width
                 - dgParts.Columns[4].Width - dgParts.Columns[5].Width - 2;
         }
@@ -454,6 +454,7 @@ namespace Process_Engineering
 
         private void cbPageNumber_SelectedIndexChanged(object sender, EventArgs e)
         {
+            SetPhaseNumber();
             if (cbPageNumber.SelectedIndex == -1)
             {
                 page = null;

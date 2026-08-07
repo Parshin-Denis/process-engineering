@@ -369,5 +369,32 @@ namespace Process_Engineering.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на http://localhost:8090.
+        /// </summary>
+        internal static string URI_local {
+            get {
+                return ResourceManager.GetString("URI local", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на http://10.182.134.219:8090.
+        /// </summary>
+        internal static string URI_remote {
+            get {
+                return ResourceManager.GetString("URI remote", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на http://10.182.134.219:8090.
+        /// </summary>
+        internal static string URI_server {
+            get {
+                return ResourceManager.GetString("URI server", resourceCulture);
+            }
+        }
     }
 }

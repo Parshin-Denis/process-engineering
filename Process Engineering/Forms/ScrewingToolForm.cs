@@ -33,7 +33,7 @@ namespace Process_Engineering.Forms
         private List<Pitch> pitchesFilter = Pitch.pitches.Where(p => ScrewingTool.screwingTools.Select(t => t.pitchId).Contains(p.id)).ToList();
         private List<ScrewingTool> toolsReplace;
         private bool isFilterActive = false;
-        private bool isUserChange = false;
+        private bool userAction = false;
 
         #region Главная форма
 
@@ -96,12 +96,13 @@ namespace Process_Engineering.Forms
             dgTools.Columns[1].Width = dgTools.Width - SystemInformation.VerticalScrollBarWidth -
                 dgTools.Columns[0].Width - dgTools.Columns[2].Width - dgTools.Columns[3].Width - dgTools.Columns[4].Width -
                 dgTools.Columns[5].Width - dgTools.Columns[6].Width - dgTools.Columns[7].Width - dgTools.Columns[8].Width - 3;
-            dgTools.ReadOnly = true;
+            dgTools.ReadOnly = true;            
         }
 
         private void dgTools_SelectionChanged(object sender, EventArgs e)
         {
-            isUserChange = false;
+            if (!userAction) return;
+            userAction = false;
 
             selectedTool = dgTools.SelectedRows.Count == 0
                 ? new ScrewingTool()
@@ -130,7 +131,7 @@ namespace Process_Engineering.Forms
             bUpdate.Text = ConstStorage.EDIT;
             bAdd.Enabled = User.isScrewingEditingAllowed();
 
-            isUserChange = true;
+            userAction = true;
         }
 
         private void dgTools_SizeChanged(object sender, EventArgs e)
@@ -186,8 +187,15 @@ namespace Process_Engineering.Forms
                 .Where(t => !tbTorqueFilter.Text.Equals(string.Empty) ? float.Parse(tbTorqueFilter.Text) == t.torque : true)
                 .Where(t => cbAnomaly.Checked ? t.HasAnomaly() : true)
                 .ToList();
+            userAction = false;
             dgTools.DataSource = new BindingList<ScrewingTool>(filteredTools);
             dgTools.ClearSelection();
+            userAction = true;
+            if (selectedTool == null || selectedTool.id != 0)
+            {
+                dgTools_SelectionChanged(sender, EventArgs.Empty);
+            }
+            
             foreach (DataGridViewRow row in dgTools.Rows)
             {
                 UpdateRowStyle(row);
@@ -282,7 +290,7 @@ namespace Process_Engineering.Forms
 
         private void ToolParamaterChanged(object sender, EventArgs e)
         {
-            if (!isUserChange) return;
+            if (!userAction) return;
             if (sender.Equals(cbCards))
             {
                 CardWithScrewing selectedCard = cbCards.SelectedItem as CardWithScrewing;
@@ -529,11 +537,9 @@ namespace Process_Engineering.Forms
             ConstStorage.BRANDS = await DataBaseService.getConstants(ConstStorage.BRAND);
             ScrewingToolTypeForm screwingToolTypeForm = new ScrewingToolTypeForm();
             screwingToolTypeForm.ShowDialog();
-            //cbToolType.Items.Clear();
-            //cbToolType.Items.AddRange(ScrewingToolType.types.ToArray());
-            //cbModelFilter.Items.Clear();
+            GeneralService.FilterComboBoxItems(cbToolType, ScrewingToolType.types);
             models = ScrewingToolType.types.Select(t => t.ToString()).OrderBy(m => m).ToList();
-            //cbModelFilter.Items.AddRange(models.ToArray());
+            GeneralService.FilterComboBoxItems(cbModelFilter, models);            
         }
 
         #endregion

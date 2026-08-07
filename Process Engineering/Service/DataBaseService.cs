@@ -1,5 +1,6 @@
 ﻿using Process_Engineering.DTO;
 using Process_Engineering.Objects;
+using Process_Engineering.Properties;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -32,7 +33,7 @@ namespace Process_Engineering.Service
 
         static DataBaseService()
         {
-            http.BaseAddress = new Uri("http://10.182.134.219:8090"); // http://localhost:8090 http://10.182.134.219:8090
+            http.BaseAddress = new Uri(Resources.URI_server); // http://localhost:8090 http://10.182.134.219:8090
         }
 
         private static async Task<HttpResponseMessage> sendRequest(RequestType requestType, string uri, HttpContent content = null)
